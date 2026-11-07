@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>وضعیت و عیب‌یابی ربات‌های بله | فروشگاه اونیوال</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --success: #059669;
+      --danger: #dc2626;
+      --warning: #d97706;
+      --border: #e2e8f0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text-main);
+      line-height: 1.6;
+      padding: 1.5rem;
+    }
+    .container { max-width: 1000px; margin: 0 auto; }
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid var(--border);
+    }
+    h1 { font-size: 1.5rem; font-weight: 800; color: #1e293b; }
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.6rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .badge-success { background: #d1fae5; color: #065f46; }
+    .badge-danger { background: #fee2e2; color: #991b1b; }
+    .badge-warning { background: #fef3c7; color: #92400e; }
+    .badge-neutral { background: #f1f5f9; color: #475569; }
+
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem; }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1.25rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .card h2 {
+      font-size: 1.1rem;
+      margin-bottom: 0.75rem;
+      color: #334155;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .auth-bar {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 0.5rem;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+    }
+    input, select, textarea, button {
+      font-family: inherit;
+      font-size: 0.875rem;
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.375rem;
+      border: 1px solid var(--border);
+    }
+    input[type="text"], input[type="password"] {
+      flex: 1;
+      min-width: 220px;
+    }
+    button {
+      background: var(--primary);
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: background 0.2s;
+    }
+    button:hover { background: var(--primary-hover); }
+    button.secondary { background: #64748b; }
+    button.secondary:hover { background: #475569; }
+    button.danger { background: var(--danger); }
+    button.danger:hover { background: #b91c1c; }
+    button.success { background: var(--success); }
+    button.success:hover { background: #047857; }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #f1f5f9;
+      font-size: 0.875rem;
+    }
+    .stat-row:last-child { border-bottom: none; }
+    .stat-label { color: var(--text-muted); }
+    .stat-val { font-weight: 600; direction: ltr; text-align: left; }
+
+    pre {
+      background: #0f172a;
+      color: #38bdf8;
+      padding: 0.75rem;
+      border-radius: 0.5rem;
+      font-size: 0.75rem;
+      direction: ltr;
+      text-align: left;
+      overflow-x: auto;
+      max-height: 250px;
+    }
+    .log-list {
+      max-height: 350px;
+      overflow-y: auto;
+      font-size: 0.8rem;
+      border: 1px solid var(--border);
+      border-radius: 0.375rem;
+      background: #fff;
+    }
+    .log-item {
+      padding: 0.5rem 0.75rem;
+      border-bottom: 1px solid #f1f5f9;
+      display: flex;
+      gap: 0.5rem;
+      align-items: baseline;
+    }
+    .log-item:nth-child(even) { background: #f8fafc; }
+    .log-time { color: var(--text-muted); font-size: 0.75rem; white-space: nowrap; direction: ltr; }
+    .log-badge { font-weight: 700; font-size: 0.7rem; padding: 0.1rem 0.4rem; border-radius: 0.25rem; }
+    .log-msg { word-break: break-all; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>پیشخوان وضعیت ربات‌های بله (ONIVAL Bot Status)</h1>
+        <p style="color: var(--text-muted); font-size: 0.85rem;">استعلام برخط، خودارزیابی اتصال، وضعیت وب‌هوک و گزارش خطاهای سرور</p>
+      </div>
+      <div style="display: flex; gap: 0.5rem;">
+        <button onclick="refreshAll()" id="btnRefresh">بروزرسانی وضعیت</button>
+        <button class="secondary" onclick="runSelfCheck()" id="btnCheck">اجرای خودارزیابی کامل</button>
+      </div>
+    </header>
+
+    <div class="auth-bar">
+      <label for="adminToken" style="font-weight: 700; font-size: 0.85rem;">توکن نشست مدیریت:</label>
+      <input type="password" id="adminToken" placeholder="توکن دریافتی از لاگین مدیریت (Bearer)" autocomplete="off">
+      <button onclick="saveToken()">ثبت توکن</button>
+      <span id="authNotice" style="font-size: 0.8rem; color: var(--text-muted);"></span>
+    </div>
+
+    <div class="grid">
+      <!-- Customer Bot Card -->
+      <div class="card">
+        <h2>
+          <span>ربات مشتریان (Customer Bot)</span>
+          <span id="custBadge" class="badge badge-neutral">بررسی نشده</span>
+        </h2>
+        <div class="stat-row">
+          <span class="stat-label">نام کاربری:</span>
+          <span class="stat-val" id="custUsername">-</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">وضعیت اتصال به API:</span>
+          <span class="stat-val" id="custApi">-</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">آدرس وب‌هوک ثبت‌شده:</span>
+          <span class="stat-val" id="custWebhook">-</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">آخرین خطای وب‌هوک:</span>
+          <span class="stat-val" id="custError" style="color: var(--danger);">-</span>
+        </div>
+        <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+          <button style="flex:1;" onclick="manageWebhook('customer', 'set')">ثبت وب‌هوک</button>
+          <button style="flex:1;" class="secondary" onclick="manageWebhook('customer', 'info')">استعلام</button>
+        </div>
+      </div>
+
+      <!-- Admin Bot Card -->
+      <div class="card">
+        <h2>
+          <span>ربات ادمین (Admin Bot)</span>
+          <span id="adminBadge" class="badge badge-neutral">بررسی نشده</span>
+        </h2>
+        <div class="stat-row">
+          <span class="stat-label">نام کاربری ادمین:</span>
+          <span class="stat-val" id="adminUsername">-</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">شناسه چت مدیر:</span>
+          <span class="stat-val" id="adminChatId">-</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">وضعیت اتصال به API:</span>
+          <span class="stat-val" id="adminApi">-</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">آدرس وب‌هوک ثبت‌شده:</span>
+          <span class="stat-val" id="adminWebhook">-</span>
+        </div>
+        <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+          <button style="flex:1;" onclick="manageWebhook('admin', 'set')">ثبت وب‌هوک</button>
+          <button style="flex:1;" class="secondary" onclick="manageWebhook('admin', 'info')">استعلام</button>
+        </div>
+      </div>
+
+      <!-- Bale Wallet & Storage Card -->
+      <div class="card">
+        <h2>
+          <span>درگاه کیف‌پول و هاست</span>
+          <span id="walletBadge" class="badge badge-neutral">-</span>
+        </h2>
+        <div class="stat-row">
+          <span class="stat-label">حالت درگاه بله:</span>
+          <span class="stat-val" id="walletMode">-</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">توکن کیف‌پول زنده:</span>
+          <span class="stat-val" id="walletLive">-</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">سرویس ذخیره‌سازی سرور:</span>
+          <span class="stat-val" id="serverStorage">-</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">نسخه بیلد سرور:</span>
+          <span class="stat-val" id="buildId">-</span>
+        </div>
+        <div style="margin-top: 1rem;">
+          <button style="width: 100%;" class="success" onclick="testInvoicePrompt()">صدور فاکتور آزمایشی کیف‌پول</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Interactive Tools -->
+    <div class="grid">
+      <div class="card">
+        <h2>ارسال پیام آزمایشی به بله</h2>
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+          <div>
+            <label style="font-size: 0.8rem; color: var(--text-muted);">ربات ارسال‌کننده:</label>
+            <select id="sendTarget" style="width: 100%;">
+              <option value="customer">ربات مشتریان (Customer Bot)</option>
+              <option value="admin">ربات اختصاصی ادمین (Admin Bot)</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size: 0.8rem; color: var(--text-muted);">شناسه چت مقصد (Chat ID):</label>
+            <input type="text" id="sendChatId" placeholder="شناسه عددی کاربری بله">
+          </div>
+          <div>
+            <label style="font-size: 0.8rem; color: var(--text-muted);">متن پیام:</label>
+            <textarea id="sendText" rows="2" style="width: 100%;">تست برقراری ارتباط از پیشخوان تشخیصی اونیوال</textarea>
+          </div>
+          <button onclick="sendTestMessage()">ارسال پیام</button>
+          <div id="sendResult" style="font-size: 0.8rem;"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>پاسخ آخرین عملیات / خودارزیابی</h2>
+        <pre id="outputLog">برای مشاهده جزئیات خودارزیابی یا وب‌هوک، یکی از دکمه‌های بالا را کلیک کنید.</pre>
+      </div>
+    </div>
+
+    <!-- Activity Logs -->
+    <div class="card">
+      <h2>
+        <span>آخرین لاگ‌های فعالیت ربات (سرور)</span>
+        <button class="secondary" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;" onclick="loadLogs()">بارگذاری لاگ‌ها</button>
+      </h2>
+      <div class="log-list" id="logContainer">
+        <div style="padding: 1rem; text-align: center; color: var(--text-muted);">در حال دریافت لاگ‌ها...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'onival_admin_session_token_v1';
+    function getToken() {
+      return sessionStorage.getItem(STORAGE_KEY) || localStorage.getItem(STORAGE_KEY) || document.getElementById('adminToken').value.trim();
+    }
+    function saveToken() {
+      const val = document.getElementById('adminToken').value.trim();
+      if (val) {
+        sessionStorage.setItem(STORAGE_KEY, val);
+        localStorage.setItem(STORAGE_KEY, val);
+        document.getElementById('authNotice').textContent = 'توکن در حافظه ذخیره شد.';
+        refreshAll();
+      } else {
+        sessionStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(STORAGE_KEY);
+        document.getElementById('authNotice').textContent = 'توکن پاکسازی شد.';
+      }
+    }
+
+    async function req(url, options = {}) {
+      const token = getToken();
+      const headers = Object.assign({}, options.headers || {});
+      if (token) headers['Authorization'] = 'Bearer ' + token;
+      headers['Content-Type'] = 'application/json';
+      const res = await fetch(url, Object.assign({}, options, { headers }));
+      const data = await res.json().catch(() => ({ ok: false, error: 'پاسخ سرور JSON معتبر نبود.' }));
+      return { status: res.status, ok: res.ok, data };
+    }
+
+    async function refreshAll() {
+      const out = document.getElementById('outputLog');
+      try {
+        const { ok, status, data } = await req('/api/bot/status');
+        if (!ok) {
+          out.textContent = 'خطا در دریافت وضعیت: HTTP ' + status + '\n' + JSON.stringify(data, null, 2);
+          if (status === 401) {
+            document.getElementById('authNotice').textContent = 'توکن مدیریت نامعتبر یا منقضی است.';
+          }
+          return;
+        }
+
+        out.textContent = JSON.stringify(data, null, 2);
+        const rep = data.report || {};
+        
+        // Customer
+        document.getElementById('custUsername').textContent = rep.customerBot?.username || '-';
+        document.getElementById('custApi').textContent = rep.customerBot?.apiConnected ? 'متصل' : 'قطع';
+        document.getElementById('custBadge').className = 'badge ' + (rep.customerBot?.apiConnected ? 'badge-success' : 'badge-danger');
+        document.getElementById('custBadge').textContent = rep.customerBot?.apiConnected ? 'فعال' : 'غیرفعال';
+        document.getElementById('custWebhook').textContent = rep.customerBot?.webhook?.url || 'ثبت نشده';
+        document.getElementById('custError').textContent = rep.customerBot?.webhook?.last_error_message || 'هیچ خطایی ثبت نشده';
+
+        // Admin
+        document.getElementById('adminUsername').textContent = rep.adminBot?.username || '-';
+        document.getElementById('adminChatId').textContent = rep.adminBot?.adminChatId || 'تعریف نشده';
+        document.getElementById('adminApi').textContent = rep.adminBot?.apiConnected ? 'متصل' : 'قطع';
+        document.getElementById('adminBadge').className = 'badge ' + (rep.adminBot?.apiConnected ? 'badge-success' : 'badge-danger');
+        document.getElementById('adminBadge').textContent = rep.adminBot?.apiConnected ? 'فعال' : 'غیرفعال';
+        document.getElementById('adminWebhook').textContent = rep.adminBot?.webhook?.url || 'ثبت نشده';
+
+        // Wallet & host
+        document.getElementById('walletMode').textContent = rep.wallet?.mode || 'live';
+        document.getElementById('walletLive').textContent = rep.wallet?.liveConfigured ? 'تنظیم شده' : 'خالی';
+        document.getElementById('walletBadge').textContent = rep.wallet?.liveConfigured ? 'کیف‌پول فعال' : 'کیف‌پول غیرفعال';
+        document.getElementById('walletBadge').className = 'badge ' + (rep.wallet?.liveConfigured ? 'badge-success' : 'badge-warning');
+        document.getElementById('serverStorage').textContent = rep.system?.storageReady ? 'آماده (تراکنشی)' : 'خطا';
+        document.getElementById('buildId').textContent = rep.system?.buildId || '-';
+
+        if (rep.adminBot?.adminChatId) {
+          document.getElementById('sendChatId').value = rep.adminBot.adminChatId;
+        }
+      } catch (err) {
+        out.textContent = 'خطای اتصال: ' + err.message;
+      }
+      loadLogs();
+    }
+
+    async function runSelfCheck() {
+      const out = document.getElementById('outputLog');
+      out.textContent = 'در حال اجرای خودارزیابی چندمرحله‌ای بر روی هاست...';
+      try {
+        const { ok, data } = await req('/api/bot/self-check', { method: 'POST', body: '{}' });
+        out.textContent = JSON.stringify(data, null, 2);
+        refreshAll();
+      } catch (err) {
+        out.textContent = 'خطا در اجرای خودارزیابی: ' + err.message;
+      }
+    }
+
+    async function manageWebhook(botRole, action) {
+      const out = document.getElementById('outputLog');
+      out.textContent = 'در حال ارسال درخواست وب‌هوک به بله...';
+      try {
+        const { ok, data } = await req('/api/bot/webhook-action', {
+          method: 'POST',
+          body: JSON.stringify({ bot: botRole, action })
+        });
+        out.textContent = JSON.stringify(data, null, 2);
+        refreshAll();
+      } catch (err) {
+        out.textContent = 'خطا در مدیریت وب‌هوک: ' + err.message;
+      }
+    }
+
+    async function testInvoicePrompt() {
+      const cid = prompt('شناسه کاربری عددی بله جهت ارسال فاکتور تستی را وارد فرمایید:', document.getElementById('sendChatId').value || '');
+      if (!cid) return;
+      const out = document.getElementById('outputLog');
+      out.textContent = 'در حال صدور و ارسال فاکتور آزمایشی...';
+      try {
+        const { ok, data } = await req('/api/bot/test-invoice', {
+          method: 'POST',
+          body: JSON.stringify({ chatId: cid, amount: 1000 })
+        });
+        out.textContent = JSON.stringify(data, null, 2);
+        alert(ok ? 'فاکتور تستی با موفقیت به چت بله ارسال شد.' : ('خطا: ' + (data.error || 'عدم ارسال')));
+      } catch (err) {
+        out.textContent = 'خطا: ' + err.message;
+      }
+    }
+
+    async function sendTestMessage() {
+      const target = document.getElementById('sendTarget').value;
+      const chatId = document.getElementById('sendChatId').value.trim();
+      const text = document.getElementById('sendText').value.trim();
+      const resDiv = document.getElementById('sendResult');
+
+      if (!chatId || !text) {
+        alert('شناسه چت و متن پیام الزامی است.');
+        return;
+      }
+
+      resDiv.textContent = 'در حال ارسال...';
+      try {
+        const { ok, data } = await req('/api/bot/send-test-message', {
+          method: 'POST',
+          body: JSON.stringify({ target, chatId, text })
+        });
+        if (ok) {
+          resDiv.style.color = 'var(--success)';
+          resDiv.textContent = 'پیام با موفقیت به بله تحویل داده شد (شناسه پیام: ' + (data.messageId || 'ثبت شده') + ')';
+        } else {
+          resDiv.style.color = 'var(--danger)';
+          resDiv.textContent = 'خطا در تحویل: ' + (data.error || data.description || 'ناموفق');
+        }
+      } catch (err) {
+        resDiv.style.color = 'var(--danger)';
+        resDiv.textContent = 'خطا: ' + err.message;
+      }
+    }
+
+    async function loadLogs() {
+      const container = document.getElementById('logContainer');
+      try {
+        const { ok, data } = await req('/api/bot/logs');
+        if (!ok || !Array.isArray(data.logs)) {
+          container.innerHTML = '<div style="padding:1rem;color:var(--text-muted);">لاگی یافت نشد یا دسترسی نامعتبر است.</div>';
+          return;
+        }
+        if (data.logs.length === 0) {
+          container.innerHTML = '<div style="padding:1rem;color:var(--text-muted);">هیچ لاگ ثبتی در سیستم وجود ندارد.</div>';
+          return;
+        }
+
+        container.innerHTML = data.logs.slice(0, 50).map(l => {
+          const color = l.type === 'error' ? 'badge-danger' : (l.type === 'warning' ? 'badge-warning' : 'badge-neutral');
+          return `
+            <div class="log-item">
+              <span class="log-time">${l.timestamp || l.creationTime || ''}</span>
+              <span class="badge ${color} log-badge">${l.action || l.event || 'LOG'}</span>
+              <span class="log-msg">${l.message || l.detail || ''}</span>
+            </div>
+          `;
+        }).join('');
+      } catch (err) {
+        container.innerHTML = '<div style="padding:1rem;color:var(--danger);">خطا در خواندن لاگ‌ها: ' + err.message + '</div>';
+      }
+    }
+
+    // Init
+    const saved = sessionStorage.getItem(STORAGE_KEY) || localStorage.getItem(STORAGE_KEY);
+    if (saved) document.getElementById('adminToken').value = saved;
+    refreshAll();
+  </script>
+</body>
+</html>
